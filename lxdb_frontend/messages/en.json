@@ -1,0 +1,40 @@
+{
+  "banner": {
+    "text": "This is one of the websites of the Federal Governments of the Duspean Republic and the Country of Reality",
+    "du": "Coat of Arms of the Duspean Republic",
+    "cr": "Coat of Arms of the Country of Reality"
+  },
+  "title": "Legislation Database of the Duspean Republic and the Country of Reality",
+  "filter": {
+    "title": {
+      "name": "Title",
+      "placeholder": "Bill №71/2025 «On Establishing Salaries for Citizens of the Duspean Republic in Federal Positions»",
+      "description": "Filter by document title"
+    },
+    "date": {
+      "name": "Date of Adoption",
+      "select": "Select a date",
+      "description": "Filter by the document adoption date"
+    },
+    "country": {
+      "name": "Country",
+      "description": "Filter by issuing country"
+    }
+  },
+  "notFound": {
+    "title": "Documents not found",
+    "description": "Try adjusting the filters. If none are set, there might have been a server error."
+  },
+  "document": {
+    "notFound": "Document not found",
+    "country": "Related to the {country}",
+    "published": "Published on {date}",
+    "page": "Page",
+    "of": "of"
+  },
+  "countries": {
+    "all": "All countries",
+    "du": "Duspean Republic",
+    "cr": "Country of Reality"
+  }
+}

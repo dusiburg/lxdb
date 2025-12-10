@@ -1,0 +1,19 @@
+FROM node:20 AS builder
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --include=dev
+COPY . .
+RUN npm run build
+
+FROM node:20 AS production
+WORKDIR /app
+COPY package.json package-lock.json* ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/messages ./messages
+RUN npm prune --omit=dev
+EXPOSE 80
+CMD ["npm", "start", "--", "-p", "80", "-H", "0.0.0.0"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget -q --spider http://localhost:80/ || exit 1
