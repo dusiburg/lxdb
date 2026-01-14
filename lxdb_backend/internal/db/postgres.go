@@ -11,13 +11,13 @@ import (
 
 var Pool *pgxpool.Pool
 
-func Init() {
+func InitPostgres() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	var err error
 	Pool, err = pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Fatalf("Failed to connect to the database: %v", err)
+		log.Fatalf("Failed to connect to Postgres: %v", err)
 	}
 }

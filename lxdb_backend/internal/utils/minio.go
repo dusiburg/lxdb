@@ -17,11 +17,21 @@ const (
 	MinioTimeout  = 10 * time.Second
 )
 
-func NewMinioClient() (*minio.Client, error) {
-	return minio.New(MinioEndpoint, &minio.Options{
+var MinioClient *minio.Client
+
+func InitMinioClient() error {
+	client, err := minio.New(MinioEndpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(os.Getenv("S3_LOGIN"), os.Getenv("S3_PASSWORD"), ""),
 		Secure: true,
 	})
+
+	if err != nil {
+		return err
+	}
+
+	MinioClient = client
+
+	return nil
 }
 
 func GetSignedURL(client *minio.Client, objectKey string) (string, error) {

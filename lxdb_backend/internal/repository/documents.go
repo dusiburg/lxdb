@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"lxdb_backend/internal/models"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 const queryTimeout = 30 * time.Second
@@ -48,14 +51,6 @@ func GetDocument(pool *pgxpool.Pool, id uuid.UUID) (models.Document, error) {
 		return models.Document{}, err
 	}
 
-	client, err := utils.NewMinioClient()
-	if err != nil {
-		return models.Document{}, err
-	}
-
-	signedUrl, _ := utils.GetSignedURL(client, document.File)
-	document.File = signedUrl
-
 	return document, nil
 }
 
@@ -84,4 +79,47 @@ func SaveDocuments(pool *pgxpool.Pool, documents []models.Document) error {
 	}
 
 	return tx.Commit(ctx)
+}
+
+func GetCashedDocument(Redis *redis.Client, pool *pgxpool.Pool, id uuid.UUID) (models.Document, error) {
+	key := fmt.Sprintf("document:%s", id)
+
+	value, err := Redis.Get(context.Background(), key).Result()
+	if err == redis.Nil {
+		document, err := GetDocument(pool, id)
+
+		if err != nil {
+			return models.Document{}, err
+		}
+
+		documentJson, err := json.Marshal(document)
+
+		if err != nil {
+			return models.Document{}, err
+		}
+
+		err = Redis.Set(context.Background(), key, string(documentJson), time.Hour*24*30).Err()
+
+		if err != nil {
+			return models.Document{}, err
+		}
+
+		signedUrl, _ := utils.GetSignedURL(utils.MinioClient, document.File)
+		document.File = signedUrl
+
+		return document, nil
+	} else if err != nil {
+		return models.Document{}, err
+	}
+
+	var document models.Document
+
+	if err := json.Unmarshal([]byte(value), &document); err != nil {
+		return models.Document{}, err
+	}
+
+	signedUrl, _ := utils.GetSignedURL(utils.MinioClient, document.File)
+	document.File = signedUrl
+
+	return document, nil
 }

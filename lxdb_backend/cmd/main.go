@@ -8,6 +8,7 @@ import (
 	"lxdb_backend/internal/db"
 	"lxdb_backend/internal/handlers"
 	"lxdb_backend/internal/middleware"
+	"lxdb_backend/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -20,8 +21,15 @@ func main() {
 
 	port := os.Getenv("PORT")
 
-	db.Init()
+	db.InitPostgres()
 	defer db.Pool.Close()
+
+	db.InitRedis()
+	defer db.Redis.Close()
+
+	if err := utils.InitMinioClient(); err != nil {
+		log.Fatalf("Failed to connect Minio: %v", err)
+	}
 
 	router := gin.Default()
 
@@ -29,8 +37,7 @@ func main() {
 
 	router.GET("/api/documents", handlers.GetDocuments)
 	router.GET("/api/document/:id", handlers.GetDocument)
-
-	//router.GET("/api/parse", handlers.GetParsedDocuments)
+	router.POST("/api/document/create", handlers.CreateDocument)
 
 	log.Println("Server starting on port", port)
 	if err := router.Run(":" + port); err != nil {
